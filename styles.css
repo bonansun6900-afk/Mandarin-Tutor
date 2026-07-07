@@ -245,6 +245,43 @@ body {
 .popup .popup-actions .btn { font-size: 13px; padding: 5px 12px; }
 .popup .nodef { color: var(--muted); }
 
+/* ---------- Flashcards ---------- */
+.vocab-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { opacity: 0.9; color: #fff; }
+
+.flash-progress { text-align: center; color: var(--muted); font-size: 13px; margin: 14px 0 10px; }
+.flash-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  min-height: 320px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 40px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.flash-card:focus-visible { outline: 2px solid var(--accent); }
+.flash-word { font-size: 56px; font-weight: 700; line-height: 1.3; }
+.flash-answer .pinyin { color: var(--accent); font-size: 24px; font-weight: 600; margin-bottom: 10px; }
+.flash-answer .def { font-size: 16px; }
+.flash-answer .ctx { color: var(--muted); font-size: 13px; margin-top: 14px; }
+.flash-answer .box-info { color: var(--muted); font-size: 12px; margin-top: 8px; }
+.flash-hint { color: var(--muted); font-size: 12px; }
+.flash-actions { display: flex; justify-content: center; gap: 14px; margin-top: 20px; }
+.flash-actions .btn { font-size: 16px; padding: 12px 28px; }
+.flash-again { border-color: var(--advanced); color: var(--advanced); }
+.flash-again:hover { background: var(--advanced); border-color: var(--advanced); color: #fff; }
+.flash-good { border-color: var(--easy); color: var(--easy); }
+.flash-good:hover { background: var(--easy); border-color: var(--easy); color: #fff; }
+
 /* ---------- Vocab view ---------- */
 .vocab-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
 .vocab-item {

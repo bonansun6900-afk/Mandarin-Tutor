@@ -55,8 +55,27 @@
   <!-- Vocab view -->
   <main id="vocabView" class="container hidden">
     <button id="vocabBackBtn" class="btn ghost back">← 返回</button>
-    <h1>生词本 <span class="muted">Saved words</span></h1>
+    <div class="vocab-header">
+      <h1>生词本 <span class="muted">Saved words</span></h1>
+      <button id="practiceBtn" class="btn primary">🃏 练习 Practice <span id="dueCount" class="pill">0</span></button>
+    </div>
     <div id="vocabList" class="vocab-list"></div>
+  </main>
+
+  <!-- Flashcard view -->
+  <main id="flashView" class="container hidden">
+    <button id="flashBackBtn" class="btn ghost back">← 生词本</button>
+    <div id="flashProgress" class="flash-progress"></div>
+    <div id="flashCard" class="flash-card" tabindex="0">
+      <div id="flashWord" class="flash-word zh"></div>
+      <div id="flashBack" class="flash-answer hidden"></div>
+      <div id="flashHint" class="flash-hint">点击翻面 · tap to flip</div>
+    </div>
+    <div id="flashActions" class="flash-actions hidden">
+      <button id="flashAgain" class="btn flash-again">✗ 忘了 Again</button>
+      <button id="flashGood" class="btn flash-good">✓ 记得 Good</button>
+    </div>
+    <div id="flashDone" class="empty hidden"></div>
   </main>
 
   <!-- Word popup -->

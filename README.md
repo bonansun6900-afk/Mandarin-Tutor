@@ -31,6 +31,19 @@ The app automatically reads from Supabase when `config.js` is filled in, and
 falls back to `data/articles.local.json` otherwise. Your saved vocab (生词本)
 is stored in Supabase too — or in browser localStorage when offline.
 
+## Flashcards
+
+Words saved to the 生词本 can be practiced as flashcards (**生词本 → 练习
+Practice**). Tap a card to flip it, then grade yourself: 忘了 (again) or 记得
+(good). Scheduling is a simple Leitner system — each "good" moves the word up
+a box (review after 1, 3, 7, 14, then 30 days), a "forgot" sends it back to the
+start and repeats it in the same session. Keyboard: space to flip, 1 = again,
+2 = good. Progress syncs through Supabase across devices.
+
+Existing databases need a one-time migration:
+[supabase/migration-flashcards.sql](supabase/migration-flashcards.sql) (SQL
+Editor → paste → Run). Fresh installs get it from `schema.sql` automatically.
+
 ## Using it on your iPhone
 
 The app is a static site + Supabase, so host it anywhere. GitHub Pages setup:

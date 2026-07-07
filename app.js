@@ -5,7 +5,9 @@
 // State
 // ---------------------------------------------------------------------------
 const CFG = window.APP_CONFIG || {};
-const hasSupabase = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY);
+// "?offline" forces localStorage mode (useful for testing without Supabase)
+const hasSupabase = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) &&
+  !new URLSearchParams(location.search).has("offline");
 
 const state = {
   dict: new Map(),      // headword (simp or trad) -> [{simp, trad, pinyin, defs}]
@@ -136,6 +138,14 @@ async function sbPost(table, row) {
   });
   if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
 }
+async function sbPatch(table, filter, patch) {
+  const res = await fetch(`${CFG.SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+    method: "PATCH",
+    headers: sbHeaders(),
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
+}
 async function sbDelete(table, filter) {
   const res = await fetch(`${CFG.SUPABASE_URL}/rest/v1/${table}?${filter}`, {
     method: "DELETE",
@@ -184,10 +194,13 @@ async function loadVocab() {
 
 async function saveVocabWord(item) {
   if (state.vocab.some((v) => v.word === item.word)) return;
+  // Flashcard defaults; in Supabase mode the table defaults do the same.
+  item = { ...item, box: 0, due_at: new Date().toISOString(), reviews: 0 };
   state.vocab.unshift(item);
   updateVocabCount();
   if (hasSupabase) {
-    try { await sbPost("vocab", item); return; } catch (err) { console.error(err); }
+    const { box, due_at, reviews, ...row } = item; // let DB defaults fill SRS columns
+    try { await sbPost("vocab", row); return; } catch (err) { console.error(err); }
   }
   localStorage.setItem(VOCAB_KEY, JSON.stringify(state.vocab));
 }
@@ -319,6 +332,7 @@ function openArticle(a) {
   closePopup();
   $("listView").classList.add("hidden");
   $("vocabView").classList.add("hidden");
+  $("flashView").classList.add("hidden");
   $("readerView").classList.remove("hidden");
   const date = a.published_at ? new Date(a.published_at).toLocaleDateString() : "";
   $("articleMeta").innerHTML = `
@@ -343,6 +357,7 @@ function showList() {
   closePopup();
   $("readerView").classList.add("hidden");
   $("vocabView").classList.add("hidden");
+  $("flashView").classList.add("hidden");
   $("listView").classList.remove("hidden");
   renderList();
 }
@@ -444,7 +459,11 @@ function showVocab() {
   closePopup();
   $("listView").classList.add("hidden");
   $("readerView").classList.add("hidden");
+  $("flashView").classList.add("hidden");
   $("vocabView").classList.remove("hidden");
+  const due = dueWords().length;
+  $("dueCount").textContent = due;
+  $("practiceBtn").disabled = !state.vocab.length;
   const list = $("vocabList");
   list.innerHTML = "";
   if (!state.vocab.length) {
@@ -466,6 +485,127 @@ function showVocab() {
     list.appendChild(item);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Flashcards — Leitner spaced repetition over saved vocab
+// ---------------------------------------------------------------------------
+const BOX_INTERVAL_DAYS = [0, 1, 3, 7, 14, 30]; // box index → days until next review
+let migrationWarned = false;
+
+function dueWords() {
+  const now = Date.now();
+  return state.vocab.filter((v) => !v.due_at || new Date(v.due_at).getTime() <= now);
+}
+
+const flash = { queue: [], done: 0, total: 0, flipped: false };
+
+function startPractice() {
+  let cards = dueWords();
+  if (!cards.length) cards = [...state.vocab]; // nothing due → free practice
+  flash.queue = cards.sort(() => Math.random() - 0.5);
+  flash.total = cards.length;
+  flash.done = 0;
+  closePopup();
+  $("listView").classList.add("hidden");
+  $("readerView").classList.add("hidden");
+  $("vocabView").classList.add("hidden");
+  $("flashView").classList.remove("hidden");
+  renderFlashCard();
+}
+
+function renderFlashCard() {
+  const doneEl = $("flashDone");
+  const card = $("flashCard");
+  if (!flash.queue.length) {
+    card.classList.add("hidden");
+    $("flashActions").classList.add("hidden");
+    $("flashProgress").textContent = "";
+    const next = state.vocab
+      .map((v) => new Date(v.due_at || 0).getTime())
+      .filter((t) => t > Date.now())
+      .sort((a, b) => a - b)[0];
+    doneEl.innerHTML = `🎉 全部完成！Reviewed ${flash.done} card${flash.done === 1 ? "" : "s"}.` +
+      (next ? `<br>Next review: ${new Date(next).toLocaleDateString()}` : "");
+    doneEl.classList.remove("hidden");
+    return;
+  }
+  doneEl.classList.add("hidden");
+  card.classList.remove("hidden");
+  flash.flipped = false;
+  const v = flash.queue[0];
+  $("flashWord").textContent = v.word;
+  $("flashBack").classList.add("hidden");
+  $("flashHint").classList.remove("hidden");
+  $("flashActions").classList.add("hidden");
+  $("flashProgress").textContent = `${flash.done + 1} / ${flash.total}`;
+  card.focus({ preventScroll: true });
+}
+
+function flipCard() {
+  if (flash.flipped || !flash.queue.length) return;
+  flash.flipped = true;
+  const v = flash.queue[0];
+  const box = v.box || 0;
+  $("flashBack").innerHTML = `
+    <div class="pinyin">${escapeHtml(v.pinyin || "")}</div>
+    <div class="def">${escapeHtml(v.definition || "")}</div>
+    ${v.context ? `<div class="ctx">出自 · from 《${escapeHtml(v.context)}》</div>` : ""}
+    <div class="box-info">box ${box} · reviewed ${v.reviews || 0}×</div>`;
+  $("flashBack").classList.remove("hidden");
+  $("flashHint").classList.add("hidden");
+  $("flashActions").classList.remove("hidden");
+}
+
+async function gradeCard(ok) {
+  if (!flash.flipped || !flash.queue.length) return;
+  const v = flash.queue.shift();
+  const now = new Date();
+  v.reviews = (v.reviews || 0) + 1;
+  v.last_reviewed_at = now.toISOString();
+  if (ok) {
+    v.box = Math.min((v.box || 0) + 1, BOX_INTERVAL_DAYS.length - 1);
+    v.due_at = new Date(now.getTime() + BOX_INTERVAL_DAYS[v.box] * 864e5).toISOString();
+    flash.done++;
+  } else {
+    v.box = 0;
+    v.due_at = now.toISOString();
+    flash.queue.push(v); // ask again this session
+  }
+  persistCard(v);
+  renderFlashCard();
+}
+
+async function persistCard(v) {
+  if (hasSupabase) {
+    try {
+      await sbPatch("vocab", `word=eq.${encodeURIComponent(v.word)}`, {
+        box: v.box, due_at: v.due_at, last_reviewed_at: v.last_reviewed_at, reviews: v.reviews,
+      });
+      return;
+    } catch (err) {
+      console.error(err);
+      if (!migrationWarned && String(err).includes("column")) {
+        migrationWarned = true;
+        alert("Flashcard progress isn't saving yet: run supabase/migration-flashcards.sql " +
+          "in the Supabase SQL Editor (adds the review-state columns).");
+      }
+      return;
+    }
+  }
+  localStorage.setItem(VOCAB_KEY, JSON.stringify(state.vocab));
+}
+
+$("practiceBtn").onclick = startPractice;
+$("flashBackBtn").onclick = showVocab;
+$("flashCard").onclick = flipCard;
+$("flashAgain").onclick = () => gradeCard(false);
+$("flashGood").onclick = () => gradeCard(true);
+document.addEventListener("keydown", (ev) => {
+  if ($("flashView").classList.contains("hidden")) return;
+  if (ev.key === " ") { ev.preventDefault(); flipCard(); }
+  else if (ev.key === "1") gradeCard(false);
+  else if (ev.key === "2") gradeCard(true);
+});
 
 // ---------------------------------------------------------------------------
 // Init

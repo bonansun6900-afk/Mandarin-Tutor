@@ -20,7 +20,12 @@ create table if not exists vocab (
   pinyin text,
   definition text,
   context text,             -- title of the article the word was saved from
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  -- flashcard spaced-repetition state (Leitner)
+  box int not null default 0,
+  due_at timestamptz not null default now(),
+  last_reviewed_at timestamptz,
+  reviews int not null default 0
 );
 
 alter table articles enable row level security;
@@ -33,6 +38,7 @@ create policy "anon read articles" on articles for select using (true);
 create policy "anon read vocab"    on vocab for select using (true);
 create policy "anon add vocab"     on vocab for insert with check (true);
 create policy "anon remove vocab"  on vocab for delete using (true);
+create policy "anon update vocab"  on vocab for update using (true) with check (true);
 
 create index if not exists articles_published_idx on articles (published_at desc);
 create index if not exists articles_level_idx on articles (level);
