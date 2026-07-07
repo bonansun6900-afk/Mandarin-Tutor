@@ -264,6 +264,7 @@ body {
 .vocab-item .remove:hover { color: var(--advanced); }
 
 @media (max-width: 600px) {
+  .brand-sub, .dict-status { display: none; }
   .reader article { padding: 22px 18px; }
   .article-body { font-size: 19px; }
   .vocab-item { grid-template-columns: auto auto 1fr auto; gap: 8px; }
