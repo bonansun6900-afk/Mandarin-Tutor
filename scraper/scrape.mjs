@@ -283,14 +283,17 @@ function classifyTopic(title, content, fallback) {
 // Output: Supabase or local JSON
 // ---------------------------------------------------------------------------
 async function upsertSupabase(cfg, rows) {
+  const headers = {
+    apikey: cfg.key,
+    "Content-Type": "application/json",
+    Prefer: "resolution=merge-duplicates",
+  };
+  // Legacy service keys are JWTs and must also go in the Authorization header;
+  // new sb_secret_* keys are sent via apikey only.
+  if (cfg.key.startsWith("eyJ")) headers.Authorization = `Bearer ${cfg.key}`;
   const res = await fetch(`${cfg.url}/rest/v1/articles?on_conflict=url`, {
     method: "POST",
-    headers: {
-      apikey: cfg.key,
-      Authorization: `Bearer ${cfg.key}`,
-      "Content-Type": "application/json",
-      Prefer: "resolution=merge-duplicates",
-    },
+    headers,
     body: JSON.stringify(rows),
   });
   if (!res.ok) throw new Error(`Supabase upsert failed: ${res.status} ${await res.text()}`);

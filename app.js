@@ -115,11 +115,13 @@ function segment(text) {
 // Supabase REST helpers (no SDK needed)
 // ---------------------------------------------------------------------------
 function sbHeaders() {
-  return {
-    apikey: CFG.SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${CFG.SUPABASE_ANON_KEY}`,
-    "Content-Type": "application/json",
-  };
+  const h = { apikey: CFG.SUPABASE_ANON_KEY, "Content-Type": "application/json" };
+  // Legacy anon keys are JWTs and must also go in the Authorization header;
+  // new sb_publishable_* keys are sent via apikey only.
+  if (CFG.SUPABASE_ANON_KEY.startsWith("eyJ")) {
+    h.Authorization = `Bearer ${CFG.SUPABASE_ANON_KEY}`;
+  }
+  return h;
 }
 async function sbGet(path) {
   const res = await fetch(`${CFG.SUPABASE_URL}/rest/v1/${path}`, { headers: sbHeaders() });
