@@ -1,0 +1,12 @@
+{
+  "name": "mandarin-reader",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Read Chinese news articles at your level with click-to-reveal pinyin and definitions.",
+  "scripts": {
+    "start": "node server.mjs",
+    "scrape": "node scraper/scrape.mjs",
+    "scrape:local": "node scraper/scrape.mjs --local"
+  }
+}

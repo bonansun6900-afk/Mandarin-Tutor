@@ -1,0 +1,21 @@
+name: Scrape news articles
+
+on:
+  schedule:
+    # 05:00 and 17:00 UTC daily — adjust to taste (times are UTC).
+    - cron: "0 5,17 * * *"
+  workflow_dispatch: {}   # allows manual runs from the Actions tab
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Scrape into Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node scraper/scrape.mjs --limit 8

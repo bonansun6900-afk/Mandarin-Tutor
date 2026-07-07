@@ -1,0 +1,14 @@
+{
+  "name": "读报 Mandarin Reader",
+  "short_name": "读报",
+  "description": "Read Chinese news at your level with click-to-reveal pinyin and definitions.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf8f4",
+  "theme_color": "#b3432b",
+  "icons": [
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

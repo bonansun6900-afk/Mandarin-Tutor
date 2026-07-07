@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>读报 · Mandarin Reader</title>
+  <meta name="theme-color" content="#b3432b">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="读报">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>读</text></svg>">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button id="homeBtn" class="brand" title="Back to articles">读报<span class="brand-sub">Mandarin Reader</span></button>
+      <div class="topbar-actions">
+        <span id="dictStatus" class="dict-status">loading dictionary…</span>
+        <button id="vocabBtn" class="btn ghost">生词本 <span id="vocabCount" class="pill">0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Article list view -->
+  <main id="listView" class="container">
+    <div class="filters">
+      <input id="searchBox" type="search" placeholder="搜索 search articles…">
+      <select id="levelFilter">
+        <option value="">All levels</option>
+        <option value="easy">Easy 初级</option>
+        <option value="intermediate" selected>Intermediate 中级</option>
+        <option value="advanced">Advanced 高级</option>
+      </select>
+      <select id="sourceFilter"><option value="">All sources</option></select>
+    </div>
+    <div id="topicChips" class="chips"></div>
+    <div id="articleList" class="article-list"></div>
+    <div id="listEmpty" class="empty hidden"></div>
+  </main>
+
+  <!-- Reader view -->
+  <main id="readerView" class="container reader hidden">
+    <button id="backBtn" class="btn ghost back">← 文章列表</button>
+    <article>
+      <div id="articleMeta" class="article-meta"></div>
+      <h1 id="articleTitle" class="article-title zh"></h1>
+      <div id="articleBody" class="article-body zh"></div>
+      <p class="reader-hint">点击任何词语查看拼音和释义 · Click any word for pinyin &amp; meaning</p>
+    </article>
+  </main>
+
+  <!-- Vocab view -->
+  <main id="vocabView" class="container hidden">
+    <button id="vocabBackBtn" class="btn ghost back">← 返回</button>
+    <h1>生词本 <span class="muted">Saved words</span></h1>
+    <div id="vocabList" class="vocab-list"></div>
+  </main>
+
+  <!-- Word popup -->
+  <div id="popup" class="popup hidden" role="dialog"></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

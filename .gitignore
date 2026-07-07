@@ -1,0 +1,5 @@
+# Holds the Supabase service_role key — never commit it.
+scraper/config.json
+
+.claude/
+node_modules/
